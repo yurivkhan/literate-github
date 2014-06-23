@@ -99,6 +99,10 @@ window.onload = function() {
 				var parts = splitMessage(json.commit.message);
 				document.getElementById('commit-summary').innerHTML = marked(parts[1]);
 				document.getElementById('commit-message').innerHTML = marked(parts[2]);
+				document.getElementById('commit-author').textContent = json.commit.author.name;
+				document.getElementById('commit-author').href =
+					'mailto:' + json.commit.author.email;
+				document.getElementById('commit-date').textContent = json.commit.author.date;
 
 				var diff = document.getElementById('diff');
 				json.files.forEach(function(file) {
@@ -179,6 +183,7 @@ window.onload = function() {
 </ul>
 <div id="single-commit">
 	<h2 id="commit-summary"></h2>
+	<address><a id="commit-author" href="#"></a>, <span id="commit-date"></span></address>
 	<div id="commit-message"></div>
 	<section id="diff"></section>
 </div>
