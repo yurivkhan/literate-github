@@ -5,21 +5,28 @@
 <script type="text/javascript">
 window.onload = function() {
 
+	function ajaj(url, onload)
+	{
+		var request = new XMLHttpRequest();
+		request.onreadystatechange = function() {
+			if (request.readyState === 4)
+			{
+				var json = JSON.parse(request.response);
+				onload(json);
+			}
+		}
+		request.open('GET', url, true);
+		request.setRequestHeader('User-Agent', 'yurivkhan/literate-github');
+		request.send(null);
+	}
+
 	var base = 'https://api.github.com/repos/yurivkhan/literate-github';
 	var branch = 'master';
 
-	var request = new XMLHttpRequest();
-	request.onreadystatechange = function() {
-		if (request.readyState === 4)
-		{
-			var json = JSON.parse(request.response);
-			document.getElementById('title').textContent = json.full_name;
-			document.getElementById('description').textContent = json.description;
-		}
-	}
-	request.open('GET', base, true);
-	request.setRequestHeader('User-Agent', 'yurivkhan/literate-github');
-	request.send(null);
+	ajaj(base, function(json) {
+		document.getElementById('title').textContent = json.full_name;
+		document.getElementById('description').textContent = json.description;
+	});
 }
 </script>
 </head>
