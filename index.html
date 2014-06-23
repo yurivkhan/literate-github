@@ -27,6 +27,20 @@ window.onload = function() {
 		document.getElementById('title').textContent = json.full_name;
 		document.getElementById('description').textContent = json.description;
 	});
+
+	ajaj(base + '/commits?sha=' + branch, function(json) {
+		var commits = document.getElementById('commits');
+		json.forEach(function(commit) {
+			var parts = /^([^\0]*?)(?:\n{2,}([^\0]*))?$/.exec(commit.commit.message);
+
+			var li = document.createElement('li');
+			var a = document.createElement('a');
+			a.textContent = parts[1];
+			a.href = '?sha=' + commit.sha;
+			li.appendChild(a);
+			commits.appendChild(li);
+		});
+	});
 }
 </script>
 </head>
