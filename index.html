@@ -5,6 +5,9 @@
 <style type="text/css">
 #commits, #single-commit { display: none }
 .commits #commits, .single-commit #single-commit { display: block }
+pre heading { font-weight: bold; color: #3465a4 }
+ins { text-decoration: none; color: #4e9a06 }
+del { text-decoration: none; color: #a40000 }
 </style>
 <script type="text/javascript" src="marked.js"></script>
 <script type="text/javascript">
@@ -109,13 +112,45 @@ window.onload = function() {
 					if (file.patch)
 					{
 						var patch = document.createElement('pre');
-						patch.textContent = file.patch;
+						formatDiff(patch, file.patch);
 						section.appendChild(patch);
 					}
 
 					diff.appendChild(section);
 				});
 			});
+	}
+
+	function formatDiff(container, diff)
+	{
+		var lines = diff.split('\n');
+
+		function maxSequence(chr, wrap)
+		{
+			if (lines[i].startsWith(chr))
+			{
+				for (var j = i + 1; j < lines.length && lines[j].startsWith(chr); ++j) {}
+				container.appendChild(wrap(lines.slice(i, j).join('\n') + '\n'));
+				i = j - 1;
+			}
+		}
+
+		function wrapWith(tag)
+		{
+			return function(text) {
+				var wrapper = document.createElement(tag);
+				wrapper.textContent = text;
+				return wrapper;
+			};
+		}
+
+		for (var i = 0; i < lines.length; ++i)
+		{
+			maxSequence('@', wrapWith('heading'));
+			maxSequence(' ', function(text) { return document.createTextNode(text); });
+			maxSequence('+', wrapWith('ins'));
+			maxSequence('-', wrapWith('del'));
+		}
 	}
 
 	var base = 'https://api.github.com/repos/yurivkhan/literate-github';
