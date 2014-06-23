@@ -2,6 +2,10 @@
 <html>
 <head>
 <title id="title"></title>
+<style type="text/css">
+#commits, #single-commit { display: none }
+.commits #commits, .single-commit #single-commit { display: block }
+</style>
 <script type="text/javascript">
 window.onload = function() {
 
@@ -27,6 +31,7 @@ window.onload = function() {
 
 	function listCommits()
 	{
+		document.getElementById('root').classList.add('commits');
 		ajaj(base + '/commits?sha=' + branch, function(json) {
 			var commits = document.getElementById('commits');
 			json.forEach(function(commit) {
@@ -42,6 +47,36 @@ window.onload = function() {
 		});
 	}
 
+	function showCommit(sha)
+	{
+		document.getElementById('root').classList.add('single-commit');
+		ajaj(base + '/commits/' + sha,
+			function (json) {
+				var parts = splitMessage(json.commit.message);
+				document.getElementById('commit-summary').textContent = parts[1];
+				document.getElementById('commit-message').textContent = parts[2];
+
+				var diff = document.getElementById('diff');
+				json.files.forEach(function(file) {
+					var section = document.createElement('section');
+					section.id = file.filename;
+
+					var heading = document.createElement('h3');
+					heading.textContent = file.filename;
+					section.appendChild(heading);
+
+					if (file.patch)
+					{
+						var patch = document.createElement('pre');
+						patch.textContent = file.patch;
+						section.appendChild(patch);
+					}
+
+					diff.appendChild(section);
+				});
+			});
+	}
+
 	var base = 'https://api.github.com/repos/yurivkhan/literate-github';
 	var branch = 'master';
 
@@ -50,13 +85,26 @@ window.onload = function() {
 		document.getElementById('description').textContent = json.description;
 	});
 
-	listCommits();
+	var searchParams = new URLSearchParams(window.location.search.replace(/^\?/, ''));
+	if (searchParams.has('sha'))
+	{
+		showCommit(searchParams.get('sha'));
+	}
+	else
+	{
+		listCommits();
+	}
 }
 </script>
 </head>
-<body>
+<body id="root">
 <h1 id="description"></h1>
 <ul id="commits">
 </ul>
+<div id="single-commit">
+	<h2 id="commit-summary"></h2>
+	<pre id="commit-message"></pre>
+	<section id="diff"></section>
+</div>
 </body>
 </html>
