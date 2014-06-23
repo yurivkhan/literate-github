@@ -20,12 +20,17 @@ window.onload = function() {
 		request.send(null);
 	}
 
+	function splitMessage(message)
+	{
+		return /^([^\0]*?)(?:\n{2,}([^\0]*))?$/.exec(message);
+	}
+
 	function listCommits()
 	{
 		ajaj(base + '/commits?sha=' + branch, function(json) {
 			var commits = document.getElementById('commits');
 			json.forEach(function(commit) {
-				var parts = /^([^\0]*?)(?:\n{2,}([^\0]*))?$/.exec(commit.commit.message);
+				var parts = splitMessage(commit.commit.message);
 
 				var li = document.createElement('li');
 				var a = document.createElement('a');
