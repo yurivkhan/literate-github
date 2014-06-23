@@ -86,7 +86,7 @@ window.onload = function() {
 				var li = document.createElement('li');
 				li.innerHTML = marked(parts[1]);
 				linkify(li, '?sha=' + commit.sha);
-				commits.appendChild(li);
+				commits.insertBefore(li, commits.firstChild);
 			});
 		});
 	}
