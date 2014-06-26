@@ -75,7 +75,7 @@ window.onload = function() {
 		return /^([^\0]*?)(?:\n{2,}([^\0]*))?$/.exec(message);
 	}
 
-	function listCommits()
+	function listCommits(owner, repo, branch)
 	{
 		document.getElementById('root').classList.add('commits');
 		ajaj(base + '/commits?sha=' + branch, function(json) {
@@ -85,7 +85,7 @@ window.onload = function() {
 
 				var li = document.createElement('li');
 				li.innerHTML = marked(parts[1]);
-				linkify(li, '?sha=' + commit.sha);
+				linkify(li, '?' + owner + '/' + repo + '/commit/' + commit.sha);
 				commits.insertBefore(li, commits.firstChild);
 			});
 		});
@@ -157,22 +157,25 @@ window.onload = function() {
 		}
 	}
 
-	var base = 'https://api.github.com/repos/yurivkhan/literate-github';
-	var branch = 'master';
+	var parts = window.location.search.replace(/^\?/, '').split('/');
+	var owner = parts[0] || 'yurivkhan';
+	var repo = parts[1] || 'literate-github';
+
+	var base = 'https://api.github.com/repos/' + owner + '/' + repo;
 
 	ajaj(base, function(json) {
 		document.getElementById('title').textContent = json.full_name;
 		document.getElementById('description').innerHTML = marked(json.description);
 	});
 
-	var searchParams = new URLSearchParams(window.location.search.replace(/^\?/, ''));
-	if (searchParams.has('sha'))
+	switch (parts[2] || 'commits')
 	{
-		showCommit(searchParams.get('sha'));
-	}
-	else
-	{
-		listCommits();
+	case 'commit':
+		showCommit(parts[3] || 'master');
+		break;
+	case 'commits':
+		listCommits(owner, repo, parts[3] || 'master');
+		break;
 	}
 }
 </script>
