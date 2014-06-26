@@ -5,6 +5,9 @@
 <style type="text/css">
 #commits, #single-commit { display: none }
 .commits #commits, .single-commit #single-commit { display: block }
+#next, #prev { display: none }
+#next.next, #prev.prev { display: list-item }
+#next a, #prev a { text-decoration: none; border-bottom: dotted 1px; }
 pre heading { font-weight: bold; color: #3465a4 }
 ins { text-decoration: none; color: #4e9a06 }
 del { text-decoration: none; color: #a40000 }
@@ -20,7 +23,7 @@ window.onload = function() {
 			if (request.readyState === 4)
 			{
 				var json = JSON.parse(request.response);
-				onload(json);
+				onload(json, request);
 			}
 		}
 		request.open('GET', url, true);
@@ -75,20 +78,54 @@ window.onload = function() {
 		return /^([^\0]*?)(?:\n{2,}([^\0]*))?$/.exec(message);
 	}
 
-	function listCommits(owner, repo, branch)
+	function listCommits(owner, repo, branch, page)
 	{
-		document.getElementById('root').classList.add('commits');
-		ajaj(base + '/commits?sha=' + branch, function(json) {
-			var commits = document.getElementById('commits');
-			json.forEach(function(commit) {
-				var parts = splitMessage(commit.commit.message);
+		var commits = document.getElementById('commits');
+		var next = document.getElementById('next');
+		var prev = document.getElementById('prev');
 
-				var li = document.createElement('li');
-				li.innerHTML = parts[1] ? marked(parts[1]) : commit.sha;
-				linkify(li, '?' + owner + '/' + repo + '/commit/' + commit.sha);
-				commits.insertBefore(li, commits.firstChild);
+		function fetchCommits(url, reference, directions)
+		{
+			ajaj(url, function(json, request) {
+				json.forEach(function(commit) {
+					var parts = splitMessage(commit.commit.message);
+
+					var li = document.createElement('li');
+					li.innerHTML = parts[1] ? marked(parts[1]) : commit.sha;
+					linkify(li, '?' + owner + '/' + repo + '/commit/' + commit.sha);
+					commits.insertBefore(li, reference.nextSibling);
+				});
+				var linkHeader = request.getResponseHeader('Link');
+				if (!linkHeader) return;
+
+				function setupLink(direction, item, reference)
+				{
+					if (directions.indexOf(direction) === -1) return;
+
+					var link = RegExp('<([^>]+[?&]page=([0-9]+))>; rel="' +
+									  direction + '"').exec(linkHeader);
+					if (!link)
+					{
+						item.classList.remove(direction);
+						return;
+					}
+
+					item.classList.add(direction);
+					item.firstChild.href = '?' + owner + '/' + repo +
+						'/commits/' + branch + '/pages/' + link[2];
+					item.firstChild.onclick = function(event) {
+						fetchCommits(link[1], reference, [direction]);
+						event.preventDefault();
+					}
+				}
+				setupLink('next', next, next);
+				setupLink('prev', prev, prev.previousSibling);
 			});
-		});
+		}
+
+		document.getElementById('root').classList.add('commits');
+		fetchCommits(base + '/commits?sha=' + branch + (page ? '&page=' + page : ''),
+					 next, ['next', 'prev']);
 	}
 
 	function showCommit(sha)
@@ -177,7 +214,7 @@ window.onload = function() {
 		showCommit(parts[3] || 'master');
 		break;
 	case 'commits':
-		listCommits(owner, repo, parts[3] || 'master');
+		listCommits(owner, repo, parts[3] || 'master', parts[4] === 'pages' && parts[5]);
 		break;
 	}
 }
@@ -186,6 +223,8 @@ window.onload = function() {
 <body id="root">
 <h1 id="description"></h1>
 <ul id="commits">
+	<li id="next"><a href="#">…more commits…</a></li>
+	<li id="prev"><a href="#">…more commits…</a></li>
 </ul>
 <div id="single-commit">
 	<h2 id="commit-summary"></h2>
