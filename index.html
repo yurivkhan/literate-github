@@ -84,7 +84,7 @@ window.onload = function() {
 				var parts = splitMessage(commit.commit.message);
 
 				var li = document.createElement('li');
-				li.innerHTML = marked(parts[1]);
+				li.innerHTML = parts[1] ? marked(parts[1]) : commit.sha;
 				linkify(li, '?' + owner + '/' + repo + '/commit/' + commit.sha);
 				commits.insertBefore(li, commits.firstChild);
 			});
@@ -97,8 +97,10 @@ window.onload = function() {
 		ajaj(base + '/commits/' + sha,
 			function (json) {
 				var parts = splitMessage(json.commit.message);
-				document.getElementById('commit-summary').innerHTML = marked(parts[1]);
-				document.getElementById('commit-message').innerHTML = marked(parts[2]);
+				document.getElementById('commit-summary').innerHTML =
+					parts[1] ? marked(parts[1]) : '';
+				document.getElementById('commit-message').innerHTML =
+					parts[2] ? marked(parts[2]) : '';
 				document.getElementById('commit-author').textContent = json.commit.author.name;
 				document.getElementById('commit-author').href =
 					'mailto:' + json.commit.author.email;
@@ -165,7 +167,8 @@ window.onload = function() {
 
 	ajaj(base, function(json) {
 		document.getElementById('title').textContent = json.full_name;
-		document.getElementById('description').innerHTML = marked(json.description);
+		document.getElementById('description').innerHTML =
+			json.description ? marked(json.description) : '';
 	});
 
 	switch (parts[2] || 'commits')
