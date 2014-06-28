@@ -12,9 +12,17 @@ pre heading { font-weight: bold; color: #3465a4 }
 ins { text-decoration: none; color: #4e9a06 }
 del { text-decoration: none; color: #a40000 }
 </style>
+<link rel="stylesheet" href="github.css">
 <script type="text/javascript" src="marked.js"></script>
+<script src="highlight.pack.js"></script>
 <script type="text/javascript">
 window.onload = function() {
+
+	marked.setOptions({
+		highlight: function(code, lang) {
+			return lang ? hljs.highlight(lang, code).value : code;
+		}
+	});
 
 	function ajaj(url, onload)
 	{
